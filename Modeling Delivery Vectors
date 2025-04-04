@@ -1,0 +1,60 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+class DeliveryVector:
+    def __init__(self, name, type_of_vector, efficiency, specificity, safety, target_cells, blood_brain_barrier_crossing, immunotolerance):
+        self.name = name
+        self.type_of_vector = type_of_vector
+        self.efficiency = efficiency
+        self.specificity = specificity
+        self.safety = safety
+        self.target_cells = target_cells
+        self.blood_brain_barrier_crossing = blood_brain_barrier_crossing
+        self.immunotolerance = immunotolerance
+
+    def get_attributes(self):
+        return [self.efficiency, self.specificity, self.safety, self.target_cells, self.blood_brain_barrier_crossing, self.immunotolerance]
+
+vectors = [
+    DeliveryVector(name="AAV", type_of_vector="Viral", efficiency=8, specificity=7, safety=9, target_cells=9, blood_brain_barrier_crossing=8, immunotolerance=4),  # AAV has moderate immunotolerance
+    DeliveryVector(name="Lipid Nanoparticle", type_of_vector="Non-viral", efficiency=9, specificity=8, safety=7, target_cells=7, blood_brain_barrier_crossing=6, immunotolerance=8),  # Lipid NP has high immunotolerance
+    DeliveryVector(name="Lentivirus", type_of_vector="Viral", efficiency=7, specificity=6, safety=6, target_cells=6, blood_brain_barrier_crossing=5, immunotolerance=5),  # Lentivirus has moderate immunotolerance
+    DeliveryVector(name="Polymer-Based", type_of_vector="Non-viral", efficiency=6, specificity=7, safety=8, target_cells=7, blood_brain_barrier_crossing=4, immunotolerance=9)  # Polymer-based has high immunotolerance
+]
+
+labels = ["Efficiency", "Specificity", "Safety", "Target Cells", "BBB Crossing", "Immunotolerance"]
+
+num_vectors = len(vectors)
+
+attributes = [vector.get_attributes() for vector in vectors]
+
+# the radar chart
+angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+
+
+attributes = [np.concatenate((attribute, [attribute[0]])) for attribute in attributes]
+angles = np.concatenate((angles, [angles[0]]))
+
+# the plot
+fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+
+
+colors = ['red', 'green', 'blue', 'yellow']
+
+
+for i, attribute in enumerate(attributes):
+    ax.plot(angles, attribute, linewidth=2, linestyle='solid', label=vectors[i].name, color=colors[i])
+    ax.fill(angles, attribute, color=colors[i], alpha=0.25)
+
+# labels
+ax.set_yticklabels([])
+ax.set_xticks(angles[:-1])
+ax.set_xticklabels(labels, fontsize=12)
+ax.set_title("Comparison of Delivery Vectors", size=16)
+
+#the legend
+ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.2), fontsize=12)
+
+# the plot
+plt.tight_layout()
+plt.show()
