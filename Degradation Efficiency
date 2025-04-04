@@ -1,0 +1,58 @@
+from Bio.Seq import Seq
+from Bio import pairwise2
+import matplotlib.pyplot as plt
+
+# Define the target sequences (Stem Loops for Zika, West Nile, and Dengue)
+target_sequences = {
+    "Zika_SL1": "gcaccaattttagtgttgtcaggcctgctagtcagccacagtttggggaaagctgtgcagcctgtaacccccccaggagaagctgggaaaccaagctcatagtcaggccgagaacgccatggcacggaagaagccatgctgcctgtgagcccct",
+    "Zika_SL2": "cagaggacactgagtcaaaaaaccccacgcgcttggaagcgcaggatgggaaaagaaggtggcgaccttccccacccttcaatctggggcctgaactggagactagctgtgaatctccagcagagggactagtggttagaggagaccccccggaaaacgc",
+    "WestNile_SL1": "tttatcaattgtaaatagacaatataagcatgtacataggcataagtttatagtggcatttaacgatgttagtgtaaatagttaagaaaattttaaggaggaagtcaggccggaaatttccgccaccggaagttgagtagacggtgctgcctgcgactc",
+    "WestNile_SL2": "aaccccaggaggactgggtgaacaaagccgcgaagtgatccatgtaagccctcagaaccgtctcggaaggaggaccccacatgttgtaacttcaaagcccaatgtcagaccacgctacggcgcgccactctgcggagagtgcagtctgcgatagtgcccc",
+    "Dengue_SL1": "gtcaacacattcacaaaacaaaggaaaataagaaatcaaacaaggcaagaagtcaggccggattaagccatagtacggtaagagctatgctgcctgtgagccccgt",
+    "Dengue_SL2": "ctaaggacgtaaaatgaagtcaggccggaagccacggtttgagcaaaccgtgctgcctgtagctccatcgtggggatgtaaaaacccgggaggctgcaacccatggaagctgtacgcatggggtagcagactagtggttagaggagacccctcccaaaacacaacgcagcagcggggccc",
+    "Dengue_3’UTR": "-aacaccaggg-gaagctgtac-cctggtggta-aggactagag-gttagaggag-accccccgca-caacaataaa-cagcatattg-acgctgggag-agaccagaga-tcctgctgtc-tctacagcatcattccaggc-acagaacgcc-agaaaatgga-atggtgctgt-tgaatcaaca-ggttct",
+    "Zika 3' UTR": "aaaacagcat-attgacgtgg-gaaagaccag-agactccatg-agtttccacc-acgctggccgccaggcacag-atcgccgaac-ttcggcggcc-ggtgtgggga-aatccatggt-ttct",
+    "West Nile 3' SL": "aggaggactg-ggttaacaaaggcaaaccaa-cgccccacgc-ggccctagcc-ctggtaatgg-tgttaaccag-ggcgaaaggactagaggtta-gaggagaccg-ccgcggtttg-aagtgcacgg-ccagcctgac-tgaagctgtaagtc",
+    "DV2 Dengue SL1": "aaggcaaa-actaacatga-aacaaggcta-gaagtcaggt-cggattaagc-catagtacgg-aaaaaactat-gctacctgtg-agccccgtcc-aaggacgtta-aaagaagtcaggccattaca-aatgccatag-cttgagtaaa-ctgtgcagcc",
+    "DV2 Dengue SL2": "tgtagctcca-cctgagaaggtgtaaaaaat-ctgggaggcc-acaaaccatg-gaagctgtac-gcatggcgta-gtggactagcggttagagga-gacccctccc-ttacaaatcg-cagcaacaat-gggggcccaa-ggtgagatgaagctgtagtc",
+    "DV2 Dengue SL3": "tcactggaag-gactagaggt-tagaggagac-ccccccaaaa-caaaaaacagcatattgacg-ctgggaaaga-ccagagatcc-tgctgtctcc-tcagcatcat-tccaggcacagaacgccaga-aaatggaatg-gtgctgttga-atcaacaggt-tct",
+    "DV3 Dengue SL1": "aag-caggaggcaa-actgtcaggc-caccttaagc-cacagtacgg-aagaagctgtgcagcctgtg-agccccgtcc-aaggacgtta-aaagaagaag-tcaggcccaa-aagccacggtttgagcaaac-cgtgctgcct-gtagctccgt-cgtggggacg",
+    "DV3 Dengue SL2": "taaagcctgg-gaggctgcaaaccgtggaag-ctgtacgcac-ggtgtagcag-actagtggtt-agaggagacc-cctcccatgacacaacgcag-cagcggggcc-cgagcactga-gggaagctgt-acctcctngc-aaaggactagaggttatagg-agaccccccg",
+    "DV3 Dengue SL3": "caaacaaaaa-cagcatattg-acgctgggag-agaccagagatcctgctgtc-tcctcagcat-cattccaggc-acagaacgcc-agaaaatgga-atggtgctgttgaatcaaca-ggttct",
+    "DV2 Zika SL1": "gcaccaatctt-aatgttgtca-ggcctgctag-tcagccacag-cttggggaaa-gctgtgcagcctgtgacccc-cccaggagaa-gctgggaaac-caagcctata-gtcaggccga-gaacgccatggcacggaaga-agccatgctg-cctgtgagcc-cctcagagga",
+    "DV2 Zika SL2": "cactgagtca-aaaaaccccacgcgcttgga-ggcgcaggat-gggaaaagaa-ggtggcgacc-ttccccaccc-ttcaatctggggcctgaact-ggagatcagc-tgtggatctc-cagaagaggg-actagtggtt-agaggagaccccccggaaaa-cgcaaaacag",
+    "DV2 Zika 3' SL": "-catattgacg-ctgggaaaga-ccagagactc-catgagtttccaccacgctg-gccgccaggc-acagatcgcc-gaatagcggc-ggccggtgtg-gggaaatccatgggtctt",
+    "DV2 West Nile SL1": "atactttatcaa-ttgtaaatag-acaacataag-tatgtatataggtataggtt-tatagtggca-tttaattatg-ttagtgtaaa-tagttaagga-aaattttaaggaggaagtca-ggccggaaaa-tttccgccac-cggaagttga-gtagacggtg-ctgcctgcgactcaacccca-ggaggactgg-gtgaacaaag-ccgcgaagtg-atccatgtaa-gccctcagaaccgtctcgga-aggaggaccc",
+    "DV2 West Nile SL2": "cacatgttgt-aacttcaaag-cccaatgtca-gaccacgctacggcgtgcca-ctctgcggag-agtgcagtct-gcgatagtgc-tccaggagga-ctgggttaacaaaggcaaac-caacgcccca-cgcggcccta-gccctggtaa-tggtgttaac-cagggcgaaaggactagagg-ttagaggaga-ccccgcggtc-tgaagtgcac-ggcccagcct-ggctgaagctgtaggtcagg-ggaaggacta",
+    "DV2 West Nile 3' SL": "gaggttagtg-gagaccccgt-gccacaaaac-accacaacaaaacagcatat-tgacacctgg-gatagactag-gagatcttct-gctctgcaca-accagccacacggcacagtg-cgccgacaat-ggtggctggt-ggtgcgagaa-cacaggatct"
+
+}
+
+# Define ASO combinations
+aso_combos = {
+    "Combo 3": ["Aaccuggcucuguigcgg", "GiCtcgiiggacaguiigiiiigguuc", "UuugucguauaacugcIacccuIucuggucucu", "CgiCgGucIIugigIgggguccuciu", "UiCcUgauciCcaauiUccucUgggg"],
+    "Combo 5": ["UuugucguauaacugcIacccuIucuggucucu", "CugaucIccaaucuccucUggig", "CgiCgGucIIugigIgggguccuciu", "UiCcUgauciCcaauiUccucUgggg"],
+    "Combo 6": ["Aaccuggcucuguigcgg", "CugaucIccaaucuccucUggig", "UuugucguauaacugcIacccuIucuggucucu", "CgiCgGucIIugigIgggguccuciu", "UiCcUgauciCcaauiUccucUgggg"],
+}
+
+# Function to compute binding efficiency
+def compute_binding_efficiency(aso_combo, target_seq):
+    scores = []
+    for aso in aso_combo:
+        alignment = pairwise2.align.globalxx(Seq(aso), Seq(target_seq), one_alignment_only=True, score_only=True)
+        scores.append(alignment)
+    return sum(scores)/len(scores)  # Average binding score
+
+# Compute degradation efficiency
+degradation_scores = {}
+for combo, asos in aso_combos.items():
+    total_score = sum(compute_binding_efficiency(asos, target_sequences[ts]) for ts in target_sequences)
+    degradation_scores[combo] = total_score
+
+# Plot the results
+plt.figure(figsize=(8,6))
+plt.bar(degradation_scores.keys(), degradation_scores.values(), color=['coral', 'powderblue', 'lightpink'])
+plt.xlabel("ASO Combinations")
+plt.ylabel("Predicted Degradation Efficiency")
+plt.title("ASO Combination vs. sfRNA Degradation Efficiency")
+plt.show()
