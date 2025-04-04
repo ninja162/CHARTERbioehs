@@ -1,0 +1,112 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
+# Parameters for Lipid Nanoparticles (LNP)
+LNP_half_life = 5  # LNP half-life in hours
+LNP_efficiency = 0.8  # LNP efficiency (transfection efficiency)
+LNP_silencing_rate = 0.3  # Virus silencing rate (LNP)
+LNP_decay_rate = 0.1  # Natural virus decay rate (LNP)
+
+# Parameters for Adeno-Associated Virus (AAV)
+AAV_half_life = 10  # AAV half-life in hours
+AAV_efficiency = 0.7  # AAV efficiency (transfection efficiency)
+AAV_silencing_rate = 0.2  # Virus silencing rate (AAV)
+AAV_decay_rate = 0.05  # Natural virus decay rate (AAV)
+
+# Parameters for Polymeric Nanoparticles (PNPs)
+PNP_half_life = 12  # PNP half-life in hours
+PNP_efficiency = 0.75  # PNP efficiency (transfection efficiency)
+PNP_silencing_rate = 0.25  # Virus silencing rate (PNP)
+PNP_decay_rate = 0.07  # Natural virus decay rate (PNP)
+
+# Parameters for Micelles
+Micelle_half_life = 8  # Micelle half-life in hours
+Micelle_efficiency = 0.85  # Micelle efficiency (transfection efficiency)
+Micelle_silencing_rate = 0.35  # Virus silencing rate (Micelle)
+Micelle_decay_rate = 0.08  # Natural virus decay rate (Micelle)
+
+
+# Define the system of differential equations for the carriers
+def model(y, t, carrier_params):
+    V, I = y  # Unpack the values
+    # Unpacking the carrier-specific parameters
+    half_life, efficiency, silencing_rate, decay_rate = carrier_params
+
+    # Decay and silencing equations
+    dVdt = (efficiency * silencing_rate * I) - decay_rate * V  # Virus load reduction
+    dIdt = (1 - I / 1000) * I - silencing_rate * I * efficiency  # Infected cell silencing
+
+    return [dVdt, dIdt]
+
+
+# Time points (in hours, adjust as necessary for study design)
+t = np.linspace(0, 100, 1000)
+
+# Initial conditions [Viral Load, Infected Cells]
+initial_conditions = [1000, 10]
+
+# Parameters for each carrier
+LNP_params = [LNP_half_life, LNP_efficiency, LNP_silencing_rate, LNP_decay_rate]
+AAV_params = [AAV_half_life, AAV_efficiency, AAV_silencing_rate, AAV_decay_rate]
+PNP_params = [PNP_half_life, PNP_efficiency, PNP_silencing_rate, PNP_decay_rate]
+Micelle_params = [Micelle_half_life, Micelle_efficiency, Micelle_silencing_rate, Micelle_decay_rate]
+
+# Solving the ODE system for each carrier
+solution_LNP = odeint(model, initial_conditions, t, args=(LNP_params,))
+solution_AAV = odeint(model, initial_conditions, t, args=(AAV_params,))
+solution_PNP = odeint(model, initial_conditions, t, args=(PNP_params,))
+solution_Micelle = odeint(model, initial_conditions, t, args=(Micelle_params,))
+
+# Extracting solutions
+V_LNP, I_LNP = solution_LNP.T
+V_AAV, I_AAV = solution_AAV.T
+V_PNP, I_PNP = solution_PNP.T
+V_Micelle, I_Micelle = solution_Micelle.T
+
+# Plot the results for all carriers on the same graph
+plt.figure(figsize=(10, 6))
+
+# Plot for LNP - Viral Load and Infected Cells
+plt.plot(t, V_LNP, label="Viral Load (LNP)", color='red', linestyle='-', linewidth=2)
+plt.plot(t, I_LNP, label="Infected Cells (LNP)", color='blue', linestyle='--', linewidth=2)
+
+# Plot for AAV - Viral Load and Infected Cells
+plt.plot(t, V_AAV, label="Viral Load (AAV)", color='orange', linestyle='-', linewidth=2)
+plt.plot(t, I_AAV, label="Infected Cells (AAV)", color='green', linestyle='--', linewidth=2)
+
+# Plot for PNP - Viral Load and Infected Cells
+plt.plot(t, V_PNP, label="Viral Load (PNP)", color='purple', linestyle='-', linewidth=2)
+plt.plot(t, I_PNP, label="Infected Cells (PNP)", color='pink', linestyle='--', linewidth=2)
+
+# Plot for Micelles - Viral Load and Infected Cells
+plt.plot(t, V_Micelle, label="Viral Load (Micelle)", color='brown', linestyle='-', linewidth=2)
+plt.plot(t, I_Micelle, label="Infected Cells (Micelle)", color='cyan', linestyle='--', linewidth=2)
+
+# Labels and Title
+plt.title("Viral Load and Infected Cells over Time for Different Carriers")
+plt.xlabel("Time (hours)")
+plt.ylabel("Count")
+plt.legend(loc="best")
+
+# Show plot
+plt.tight_layout()
+plt.show()
+# Get the final values of viral load and infected cells at t=100 hours
+final_V_LNP = V_LNP[-1]
+final_I_LNP = I_LNP[-1]
+
+final_V_AAV = V_AAV[-1]
+final_I_AAV = I_AAV[-1]
+
+final_V_PNP = V_PNP[-1]
+final_I_PNP = I_PNP[-1]
+
+final_V_Micelle = V_Micelle[-1]
+final_I_Micelle = I_Micelle[-1]
+
+# Print the final values
+print(f"Final Viral Load (LNP): {final_V_LNP}, Infected Cells (LNP): {final_I_LNP}")
+print(f"Final Viral Load (AAV): {final_V_AAV}, Infected Cells (AAV): {final_I_AAV}")
+print(f"Final Viral Load (PNP): {final_V_PNP}, Infected Cells (PNP): {final_I_PNP}")
+print(f"Final Viral Load (Micelle): {final_V_Micelle}, Infected Cells (Micelle): {final_I_Micelle}")
