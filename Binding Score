@@ -1,0 +1,81 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import textwrap
+
+#the target sequences for ASOs
+target_sequences = {
+    "Dengue SL1": "gtcaac-acattcacaa-aacaaaggaa-aataagaaat-caaacaaggc-aagaagtcag-gccggattaa-gccatagtac-ggtaagagct-atgctgcctg-tgagccccgt",
+    "Dengue SL2": "ctaaggacgt-aaaatgaagt-caggccggaa-gccacggttt-gagcaaaccg-tgctgcctgt-agctccatcg-tggggatgta-aaaacccggg-aggctgcaac-ccatggaagc-tgtacgcatg-gggtagcaga-ctagtggtta-gaggagaccc-ctcccaaaac-acaacgcagc-agcggggccc",
+    "Dengue 3’UTR": "aacaccaggg-gaagctgtac-cctggtggta-aggactagag-gttagaggag-accccccgca-caacaataaa-cagcatattg-acgctgggag-agaccagaga-tcctgctgtc-tctacagcatcattccaggc-acagaacgcc-agaaaatgga-atggtgctgt-tgaatcaaca-ggttct",
+    "ZIKV SL1": "gcac-caattttagtgttgtcaggc-ctgctagtca-gccacagttt-ggggaaagct-gtgcagcctg-taacccccccaggagaagct-gggaaaccaa-gctcatagtc-aggccgagaa-cgccatggca-cggaagaagccatgctgcct-gtgagcccct",
+    "ZIKV SL2": "cagaggacac-tgagtcaaaa-aaccccacgc-gcttggaagcgcaggatggg-aaaagaaggt-ggcgaccttc-cccacccttc-aatctggggc-ctgaactggagactagctgt-gaatctccag-cagagggact-agtggttaga-ggagaccccc-cggaaaacgc",
+    "ZIKV 3’-UTR": "aaaacagcat-attgacgtgg-gaaagaccag-agactccatg-agtttccacc-acgctggccgccaggcacag-atcgccgaac-ttcggcggcc-ggtgtgggga-aatccatggt-ttct",
+    "West-Nile SL1": "tttatcaat-tgtaaataga-caatataagc-atgtacataggcataagttt-atagtggcat-ttaacgatgt-tagtgtaaat-agttaagaaa-attttaaggaggaagtcagg-ccggaaattt-ccgccaccgg-aagttgagta-gacggtgctg-cctgcgactc",
+    "West-Nile SL2": "aaccccagga-ggactgggtg-aacaaagccg-cgaagtgatc-catgtaagcc-ctcagaaccgtctcggaagg-aggaccccac-atgttgtaac-ttcaaagccc-aatgtcagac-cacgctacggcgcgccactc-tgcggagagt-gcagtctgcg-atagtgcccc",
+    "West Nile 3’SL": "aggaggactg-ggttaacaaaggcaaaccaa-cgccccacgc-ggccctagcc-ctggtaatgg-tgttaaccag-ggcgaaaggactagaggtta-gaggagaccg-ccgcggtttg-aagtgcacgg-ccagcctgac-tgaagctgtaagtc"
+
+
+
+}
+
+#  ASO sequences
+aso_combinations = {
+    "ZIKA & WEST NILE & DNV Combo 1": ["Aaccu", "ggcucugu", "i-gcgg", "G-i-ctc", "g-ii-ggacagu", "ii-g-iiii", "gguuc", "cg-i-cg",
+                "guc-ii-ug-i-g", "ii-gggguc", "cuc-i-u", "U-i-ccu", "gauc-i-ccaau", "i-uccuc", "ugggg"],
+    "ZIKA & WEST NILE & DNV Combo 2": ["Uuugu", "cguauaacugc", "i-acccu", "i-ucugg", "ucucu", "G-i-ctcg", "ii-ggacagu", "ii-g-iii", "i-gguuc",
+                "cg-i-cg", "guc-ii-ug-i-g", "ii-gggguc", "cuc-i-u", "U-i-ccu", "gauc-i-ccaau", "i-uccuc", "ugggg"],
+    "ZIKA & WEST NILE & DNV Combo 3": ["Aaccu", "ggcucugu", "i-gcgg", "G-i-ctc", "g-ii-ggacagu", "ii-g-iiii", "gguuc", "Uuugu", "cguauaacugc",
+                "i-acccu", "i-ucugg", "ucucu", "cg-i-cg", "guc-ii-ug-i-g", "ii-gggguc", "cuc-i-u", "U-i-ccu",
+                "gauc-i-ccaau", "i-uccuc", "ugggg"],
+    "ZIKA & WEST NILE & DNV Combo 4": ["Aaccu", "ggcucugu", "i-gcgg", "cugau", "c-i-ccaaucuccuc", "ugg-i-g", "cg-i-cg", "guc-ii-ug-i-g",
+                "ii-gggguc", "cuc-i-u", "U-i-ccu", "gauc-i-ccaau", "i-uccuc", "ugggg"],
+    "ZIKA & WEST NILE & DNV Combo 5": ["Uuugu", "cguauaacugc", "i-acccu", "i-ucugg", "ucucu", "cugau", "c-i-ccaaucuccuc", "ugg-i-g", "cg-i-cg",
+                "guc-ii-ug-i-g", "ii-gggguc", "cuc-i-u", "U-i-ccu", "gauc-i-ccaau", "i-uccuc", "ugggg"],
+    "ZIKA & WEST NILE & DNV Combo 6": ["Aaccu", "ggcucugu", "i-gcgg", "cugau", "c-i-ccaaucuccuc", "ugg-i-g", "Uuugu", "cguauaacugc", "i-acccu",
+                "i-ucugg", "ucucu", "cg-i-cg", "guc-ii-ug-i-g", "ii-gggguc", "cuc-i-u", "U-i-ccu", "gauc-i-ccaau",
+                "i-uccuc", "ugggg"]
+}
+
+# calculate the binding score
+def calculate_binding_score(aso_list, target_sequence):
+    score = 0
+    for aso in aso_list:
+        match_count = sum(1 for i in range(len(aso)) if i < len(target_sequence) and aso[i] == target_sequence[i])
+        score += match_count
+    return score
+
+# interact with the regions
+def model_aso_binding(target_sequences, aso_combinations):
+    results = {}
+    for target_name, target_sequence in target_sequences.items():
+        binding_scores = {}
+        for combo_name, aso_list in aso_combinations.items():
+            binding_scores[combo_name] = calculate_binding_score(aso_list, target_sequence)
+        results[target_name] = binding_scores
+    return results
+
+# bar chart
+def plot_results(results):
+    for target_name, binding_scores in results.items():
+        labels = list(binding_scores.keys())
+        values = list(binding_scores.values())
+
+        plt.figure(figsize=(12, 8))  # Increased figure size
+        plt.bar(labels, values, color="lightgreen")
+
+        # Formatting the labels to wrap text for long names
+        wrapped_labels = [textwrap.fill(label, width=15) for label in labels]  # Wrap text at 15 characters
+        plt.xticks(range(len(labels)), wrapped_labels, fontsize=10, rotation=50,
+                   ha="right")  # Increase font size and adjust rotation
+
+        plt.ylabel("Binding Score", fontsize=14)
+        plt.xlabel("ASO Combinations", fontsize=14)
+        plt.title(f"Binding Effectiveness on {target_name}", fontsize=16)
+        plt.tight_layout()  # Prevent labels from getting cut off
+        plt.show()
+
+
+binding_results = model_aso_binding(target_sequences, aso_combinations)
+
+#  results
+plot_results(binding_results)
